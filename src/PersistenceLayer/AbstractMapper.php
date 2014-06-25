@@ -21,6 +21,8 @@ abstract class AbstractMapper implements ServiceLocatorAwareInterface
 	 */
 	private $pkName;
 
+	private $tableName;
+
 	/**
 	 * @return AbstractEntity
 	 */
@@ -62,20 +64,29 @@ abstract class AbstractMapper implements ServiceLocatorAwareInterface
 	 */
 	public function getSqlObject()
 	{
-		$config = $this->getServiceLocator()->get('config')['repository'];
-
 		if (is_null($this->sqlObject))
 		{
-			$classArray = explode('\\', get_class($this));
-			$class = end($classArray);
-
 			$this->sqlObject = new Sql(
 				$this->getServiceLocator()->get('Repository\Connector'),
-				$config['mapper'][$class]
+				$this->getTableName()
 			);
 		}
 
 		return $this->sqlObject;
+	}
+
+	protected function getTableName()
+	{
+		if (is_null($this->tableName))
+		{
+			$config = $this->getServiceLocator()->get('config')['repository'];
+			$classArray = explode('\\', get_class($this));
+			$class = end($classArray);
+
+			$this->tableName = $config['mapper'][$class];
+		}
+
+		return $this->tableName;
 	}
 
 	public function save(AbstractEntity $entity)
