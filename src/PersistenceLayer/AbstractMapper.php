@@ -11,7 +11,7 @@ use Zend\ServiceManager\ServiceLocatorInterface;
 /**
  * @author Igor Vorobiov<igor.vorobioff@gmail.com>
  */
-abstract class AbstractMapper implements ServiceLocatorAwareInterface
+abstract class AbstractMapper implements ServiceLocatorAwareInterface, MapperInterface
 {
 	private $serviceLocator;
 	private $sqlObject;
@@ -62,7 +62,7 @@ abstract class AbstractMapper implements ServiceLocatorAwareInterface
 	/**
 	 * @return Sql
 	 */
-	public function getSqlObject()
+	protected function getSqlObject()
 	{
 		if (is_null($this->sqlObject))
 		{
@@ -137,21 +137,69 @@ abstract class AbstractMapper implements ServiceLocatorAwareInterface
 		return $insert;
 	}
 
-	protected function loadBy($key, $value)
+	protected function loadRawBy(Where $where, $limit = null, $offset = null)
 	{
-		$where = new Where();
-		$where->equalTo($key, $value);
-
 		$sql = $this->getSqlObject();
 		$select = $sql->select();
 		$select->where($where);
+
+		if ($limit) $select->limit($limit);
+		if ($offset) $select->offset($offset);
+
 		$statement = $sql->prepareStatementForSqlObject($select);
-		return $this->prepareRow($statement->execute());
+		return $statement->execute();
+	}
+
+	protected function existsBy(Where $where)
+	{
+		$result = $this->loadRawBy($where);
+		return (bool) $result->current();
+	}
+
+	protected function countBy(Where $where)
+	{
+		$result = $this->loadRawBy($where);
+		return $result->count();
+	}
+
+	protected function loadBy(Where $where, $offset = null)
+	{
+		return $this->prepareRow($this->loadRawBy($where, 1, $offset));
+	}
+
+	protected function loadAllBy(Where $where, $limit = null, $offset = null)
+	{
+		return $this->prepareResult($this->loadRawBy($where, $limit, $offset));
+	}
+
+	protected function deleteBy(Where $where)
+	{
+		$sql = $this->getSqlObject();
+		$delete = $sql->delete();
+
+		$delete->where($where);
+
+		$statement = $sql->prepareStatementForSqlObject($delete);
+		$statement->execute();
+	}
+
+	protected function updateBy(Where $where, array $data)
+	{
+		$sql = $this->getSqlObject();
+		$update = $sql->update();
+
+		$update->where($where);
+		$update->set($data);
+
+		$statement = $sql->prepareStatementForSqlObject($update);
+		$statement->execute();
 	}
 
 	public function load($primKey)
 	{
-		return $this->loadBy($this->getPkName(), $primKey);
+		$where = new Where();
+		$where->equalTo($this->getPkName(), $primKey);
+		return $this->loadBy($where);
 	}
 
 	public function loadAll()
@@ -177,30 +225,9 @@ abstract class AbstractMapper implements ServiceLocatorAwareInterface
 
 		$where = new Where();
 		$where->equalTo($this->getPkName(), $primKey);
+		$this->deleteBy($where);
 
-		$sql = $this->getSqlObject();
-		$delete = $sql->delete();
-
-		$delete->where($where);
-
-		$statement = $sql->prepareStatementForSqlObject($delete);
-		$statement->execute();
 		$entity->{$this->getPkName()} = null;
-	}
-
-	protected function updateValuesBy($key, $value, array $data)
-	{
-		$sql = $this->getSqlObject();
-		$update = $sql->update();
-		$where = new Where();
-
-		$where->equalTo($key, $value);
-
-		$update->where($where);
-		$update->set($data);
-
-		$statement = $sql->prepareStatementForSqlObject($update);
-		$statement->execute();
 	}
 
 	protected function prepareResult(ResultInterface $result)
