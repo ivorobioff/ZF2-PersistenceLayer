@@ -102,7 +102,9 @@ abstract class AbstractMapper implements ServiceLocatorAwareInterface, MapperInt
 			$values[$name] = $entity->$name;
 		}
 
-		if ($entity->{$this->getPkName()} === null)
+		$isInsert = $entity->{$this->getPkName()} === null;
+
+		if ($isInsert)
 		{
 			$query = $this->prepareInsert($values);
 		}
@@ -114,8 +116,11 @@ abstract class AbstractMapper implements ServiceLocatorAwareInterface, MapperInt
 		$statement = $this->getSqlObject()->prepareStatementForSqlObject($query);
 		$result = $statement->execute();
 
-		$id = $result->getGeneratedValue();
-		$entity->{$this->getPkName()} = $id;
+		if ($isInsert)
+		{
+			$id = $result->getGeneratedValue();
+			$entity->{$this->getPkName()} = $id;
+		}
 	}
 
 	private function prepareUpdate(array $values, $primKey)
