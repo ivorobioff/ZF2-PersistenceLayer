@@ -142,14 +142,19 @@ abstract class AbstractMapper implements ServiceLocatorAwareInterface, MapperInt
 		return $insert;
 	}
 
-	protected function loadRawBy(Where $where, $limit = null, $offset = null)
+	protected function loadRawBy(Where $where, QuerySettings $settings = null)
 	{
 		$sql = $this->getSqlObject();
 		$select = $sql->select();
 		$select->where($where);
 
-		if ($limit) $select->limit($limit);
-		if ($offset) $select->offset($offset);
+		if ($settings)
+		{
+			if ($settings->limit) $select->limit($settings->limit);
+			if ($settings->offset) $select->offset($settings->offset);
+			if ($settings->order) $select->order($settings->order);
+			if ($settings->group) $select->group($settings->group);
+		}
 
 		$statement = $sql->prepareStatementForSqlObject($select);
 		return $statement->execute();
@@ -157,7 +162,10 @@ abstract class AbstractMapper implements ServiceLocatorAwareInterface, MapperInt
 
 	protected function existsBy(Where $where)
 	{
-		$result = $this->loadRawBy($where, 1);
+		$settings = new QuerySettings();
+		$settings->limit = 1;
+
+		$result = $this->loadRawBy($where, $settings);
 		return (bool) $result->current();
 	}
 
@@ -167,14 +175,21 @@ abstract class AbstractMapper implements ServiceLocatorAwareInterface, MapperInt
 		return $result->count();
 	}
 
-	protected function loadBy(Where $where, $offset = null)
+	protected function loadBy(Where $where, QuerySettings $settings = null)
 	{
-		return $this->prepareRow($this->loadRawBy($where, 1, $offset));
+		if ($settings === null)
+		{
+			$settings = new QuerySettings();
+		}
+
+		$settings->limit = 1;
+
+		return $this->prepareRow($this->loadRawBy($where, $settings));
 	}
 
-	protected function loadAllBy(Where $where, $limit = null, $offset = null)
+	protected function loadAllBy(Where $where, QuerySettings $settings = null)
 	{
-		return $this->prepareResult($this->loadRawBy($where, $limit, $offset));
+		return $this->prepareResult($this->loadRawBy($where, $settings));
 	}
 
 	protected function deleteBy(Where $where)
