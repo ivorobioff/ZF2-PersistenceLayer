@@ -152,7 +152,7 @@ abstract class AbstractMapper implements ServiceLocatorAwareInterface, MapperInt
 
 	protected function existsBy(Where $where)
 	{
-		$result = $this->loadRawBy($where);
+		$result = $this->loadRawBy($where, 1);
 		return (bool) $result->current();
 	}
 
