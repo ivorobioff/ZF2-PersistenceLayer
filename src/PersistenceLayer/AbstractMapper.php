@@ -24,7 +24,7 @@ abstract class AbstractMapper implements ServiceLocatorAwareInterface
 	private $tableName;
 
 	/**
-	 * @return AbstractEntity
+	 * @return EntityInterface
 	 */
 	abstract public function createEntity();
 
@@ -89,7 +89,7 @@ abstract class AbstractMapper implements ServiceLocatorAwareInterface
 		return $this->tableName;
 	}
 
-	public function save(AbstractEntity $entity)
+	public function save(EntityInterface $entity)
 	{
 		$metadata = new Metadata($this->getSqlObject()->getAdapter());
 		$column_names = $metadata->getColumnNames($this->getSqlObject()->getTable());
@@ -170,7 +170,7 @@ abstract class AbstractMapper implements ServiceLocatorAwareInterface
 		return $statement->execute()->count();
 	}
 
-	public function delete(AbstractEntity $entity)
+	public function delete(EntityInterface $entity)
 	{
 		$primKey = $entity->{$this->getPkName()};
 		if ($primKey === null) throw new \RuntimeException('Primary key is undefined');
