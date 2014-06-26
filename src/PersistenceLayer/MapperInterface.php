@@ -6,5 +6,9 @@ namespace Developer\PersistenceLayer;
  */
 interface MapperInterface
 {
-
+	public function save(EntityInterface $entity);
+	public function load($primKey);
+	public function loadAll();
+	public function count();
+	public function delete($primKey);
 } 

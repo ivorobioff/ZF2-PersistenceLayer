@@ -218,16 +218,11 @@ abstract class AbstractMapper implements ServiceLocatorAwareInterface, MapperInt
 		return $statement->execute()->count();
 	}
 
-	public function delete(EntityInterface $entity)
+	public function delete($primKey)
 	{
-		$primKey = $entity->{$this->getPkName()};
-		if ($primKey === null) throw new \RuntimeException('Primary key is undefined');
-
 		$where = new Where();
 		$where->equalTo($this->getPkName(), $primKey);
 		$this->deleteBy($where);
-
-		$entity->{$this->getPkName()} = null;
 	}
 
 	protected function prepareResult(ResultInterface $result)
