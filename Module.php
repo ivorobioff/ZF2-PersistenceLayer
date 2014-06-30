@@ -27,7 +27,7 @@ class Module implements AutoloaderProviderInterface, ConfigProviderInterface
 
 			'service_manager' => [
 				'abstract_factories' => [
-					'Developer\PersistenceLayer\AbstractRepositoryServicesFactory',
+					'Developer\PersistenceLayer\AbstractRepositoryFactory',
 				]
 			]
 		];

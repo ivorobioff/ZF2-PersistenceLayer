@@ -1,19 +1,47 @@
 <?php
 namespace Developer\PersistenceLayer;
+use Zend\ServiceManager\ServiceLocatorAwareInterface;
+use Zend\ServiceManager\ServiceLocatorInterface;
 
 /**
  * @author Igor Vorobiov<igor.vorobioff@gmail.com>
  */
-class MapperFactory extends AbstractRepositoryFactory
+class MapperFactory implements RepositoryFactoryInterface, ServiceLocatorAwareInterface
 {
-	public function createRepository()
+	private $serviceLocator;
+
+	public function createRepository(
+		$repositoryName,
+		$repositoryConfig,
+		$config
+	)
 	{
-		$repositoryClass = $this->repositoryConfig['class'];
+		$repositoryClass = $repositoryConfig['class'];
 
 		return new  $repositoryClass(
-			$this->config['default_pk_name'],
-			$this->repositoryConfig['table'],
-			$this->serviceLocator->get($this->config['adapter'])
+			$config['default_pk_name'],
+			$repositoryConfig['table'],
+			$this->getServiceLocator()->get($config['adapter'])
 		);
+	}
+
+	/**
+	 * Set service locator
+	 *
+	 * @param ServiceLocatorInterface $serviceLocator
+	 */
+	public function setServiceLocator(ServiceLocatorInterface $serviceLocator)
+	{
+		$this->serviceLocator = $serviceLocator;
+	}
+
+	/**
+	 * Get service locator
+	 *
+	 * @return ServiceLocatorInterface
+	 */
+	public function getServiceLocator()
+	{
+		return $this->serviceLocator;
 	}
 }

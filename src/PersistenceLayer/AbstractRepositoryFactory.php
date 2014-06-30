@@ -1,28 +1,82 @@
 <?php
 namespace Developer\PersistenceLayer;
+
+use Zend\ServiceManager\AbstractFactoryInterface;
+use Zend\ServiceManager\ServiceLocatorAwareInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
 
 /**
  * @author Igor Vorobiov<igor.vorobioff@gmail.com>
  */
-abstract class AbstractRepositoryFactory
+class AbstractRepositoryFactory implements AbstractFactoryInterface
 {
-	protected $serviceLocator;
-	protected $repositoryName;
-	protected $config;
-	protected $repositoryConfig;
+	private $servicesMap;
 
-	public function __construct(
-		$repositoryName,
-		$repositoryConfig,
-		$config,
-		ServiceLocatorInterface $serviceLocator)
+	/**
+	 * Determine if we can create a service with name
+	 *
+	 * @param ServiceLocatorInterface $serviceLocator
+	 * @param $name
+	 * @param $requestedName
+	 * @return bool
+	 */
+	public function canCreateServiceWithName(ServiceLocatorInterface $serviceLocator, $name, $requestedName)
 	{
-		$this->serviceLocator = $serviceLocator;
-		$this->repositoryName = $repositoryName;
-		$this->config = $config;
-		$this->repositoryConfig = $repositoryConfig;
+		$config = $this->findRepositoryAliasByServiceName($requestedName, $serviceLocator->get('Config')['repository']);
+		return !is_null($config);
 	}
 
-	abstract public function createRepository();
-} 
+	/**
+	 * Create service with name
+	 *
+	 * @param ServiceLocatorInterface $serviceLocator
+	 * @param $name
+	 * @param $requestedName
+	 * @return mixed
+	 */
+	public function createServiceWithName(ServiceLocatorInterface $serviceLocator, $name, $requestedName)
+	{
+		$config = $serviceLocator->get('Config')['repository'];
+		$repositoryAlias = $this->findRepositoryAliasByServiceName($requestedName, $config);
+		$repositoryConfig = $config[$repositoryAlias];
+
+		/**
+		 * @var RepositoryFactoryInterface|ServiceLocatorAwareInterface $factory
+		 */
+
+		$factory = new $repositoryConfig['factory']();
+
+		if ($factory instanceof ServiceLocatorAwareInterface)
+		{
+			$factory->setServiceLocator($serviceLocator);
+		}
+
+		return $factory->createRepository(
+			$requestedName,
+			$repositoryConfig['services'][$requestedName],
+			$repositoryConfig
+		);
+	}
+
+	private function findRepositoryAliasByServiceName($serviceName, array $config)
+	{
+		if (is_null($this->servicesMap))
+		{
+			$servicesMap = [];
+
+			foreach ($config as $repositoryAlias => $repositoryConfig)
+			{
+				foreach (array_keys($repositoryConfig['services']) as $serviceAlias)
+				{
+					$servicesMap[$serviceAlias] = $repositoryAlias;
+				}
+			}
+
+			$this->servicesMap = $servicesMap;
+		}
+
+		if (!isset($this->servicesMap[$serviceName])) return null;
+
+		return $this->servicesMap[$serviceName];
+	}
+}
