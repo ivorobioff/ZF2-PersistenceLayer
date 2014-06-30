@@ -17,22 +17,17 @@ class Module implements AutoloaderProviderInterface, ConfigProviderInterface
 	{
 		return [
 			'repository' => [
-				'driver' => '',
-				'database' => '',
-				'hostname' => '',
-				'username' => '',
-				'password' => '',
-
-				'default_pk_name' => 'id',
-
-				'mapper' => [
-
-				],
+				'default' => [
+					'adapter' => '',
+					'default_pk_name' => 'id',
+					'factory' => 'Developer\PersistenceLayer\MapperFactory',
+					'services' => []
+				]
 			],
 
 			'service_manager' => [
-				'factories' => [
-					'Repository\Connector' => 'Developer\PersistenceLayer\Connection\AdapterFactory',
+				'abstract_factories' => [
+					'Developer\PersistenceLayer\AbstractRepositoryServicesFactory',
 				]
 			]
 		];

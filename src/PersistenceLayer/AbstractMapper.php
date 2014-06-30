@@ -1,6 +1,7 @@
 <?php
 namespace Developer\PersistenceLayer;
 
+use Zend\Db\Adapter\Adapter;
 use Zend\Db\Adapter\Driver\ResultInterface;
 use Zend\Db\Metadata\Metadata;
 use Zend\Db\Sql\Sql;
@@ -20,23 +21,34 @@ abstract class AbstractMapper implements ServiceLocatorAwareInterface, MapperInt
 	 * @var mixed
 	 */
 	private $pkName;
-
 	private $tableName;
+	private $adapter;
+
+	public function __construct($pkName, $tableName, Adapter $adapter)
+	{
+		$this->tableName = $tableName;
+		$this->pkName = $pkName;
+		$this->adapter = $adapter;
+	}
 
 	/**
 	 * @return EntityInterface
 	 */
 	abstract public function createEntity();
 
-	protected function getPkName()
+	public function getPkName()
 	{
-		if (is_null($this->pkName))
-		{
-			$this->pkName = $this->getServiceLocator()
-				->get('Config')['repository']['default_pk_name'];
-		}
-
 		return $this->pkName;
+	}
+
+	public function getTableName()
+	{
+		return $this->tableName;
+	}
+
+	public function getAdapter()
+	{
+		return $this->adapter;
 	}
 
 	/**
@@ -67,7 +79,7 @@ abstract class AbstractMapper implements ServiceLocatorAwareInterface, MapperInt
 		if (is_null($this->sqlObject))
 		{
 			$this->sqlObject = new Sql(
-				$this->getServiceLocator()->get('Repository\Connector'),
+				$this->getAdapter(),
 				$this->getTableName()
 			);
 		}
@@ -75,23 +87,9 @@ abstract class AbstractMapper implements ServiceLocatorAwareInterface, MapperInt
 		return $this->sqlObject;
 	}
 
-	protected function getTableName()
-	{
-		if (is_null($this->tableName))
-		{
-			$config = $this->getServiceLocator()->get('config')['repository'];
-			$classArray = explode('\\', get_class($this));
-			$class = end($classArray);
-
-			$this->tableName = $config['mapper'][$class];
-		}
-
-		return $this->tableName;
-	}
-
 	public function save(EntityInterface $entity)
 	{
-		$metadata = new Metadata($this->getSqlObject()->getAdapter());
+		$metadata = new Metadata($this->getAdapter());
 		$column_names = $metadata->getColumnNames($this->getSqlObject()->getTable());
 
 		$values = [];
