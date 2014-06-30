@@ -9,7 +9,7 @@ use Zend\ServiceManager\ServiceLocatorInterface;
  */
 class AbstractRepositoryServicesFactory implements AbstractFactoryInterface
 {
-	private $mappersConfig;
+	private $servicesMap;
 
 	/**
 	 * Determine if we can create a service with name
@@ -21,7 +21,7 @@ class AbstractRepositoryServicesFactory implements AbstractFactoryInterface
 	 */
 	public function canCreateServiceWithName(ServiceLocatorInterface $serviceLocator, $name, $requestedName)
 	{
-		$config = $this->findRepositoryServiceConfig($requestedName, $serviceLocator->get('Config')['repository']);
+		$config = $this->findRepositoryAliasByServiceName($requestedName, $serviceLocator->get('Config')['repository']);
 		return !is_null($config);
 	}
 
@@ -36,8 +36,8 @@ class AbstractRepositoryServicesFactory implements AbstractFactoryInterface
 	public function createServiceWithName(ServiceLocatorInterface $serviceLocator, $name, $requestedName)
 	{
 		$config = $serviceLocator->get('Config')['repository'];
-		$serviceConfig = $this->findRepositoryServiceConfig($requestedName, $config);
-		$repositoryConfig = $config[$serviceConfig['repository_alias']];
+		$repositoryAlias = $this->findRepositoryAliasByServiceName($requestedName, $config);
+		$repositoryConfig = $config[$repositoryAlias];
 
 		/**
 		 * @var AbstractRepositoryFactory $factory
@@ -52,26 +52,25 @@ class AbstractRepositoryServicesFactory implements AbstractFactoryInterface
 		return $factory->createRepository();
 	}
 
-	private function findRepositoryServiceConfig($serviceName, array $config)
+	private function findRepositoryAliasByServiceName($serviceName, array $config)
 	{
-		if (is_null($this->mappersConfig))
+		if (is_null($this->servicesMap))
 		{
-			$mappers = [];
+			$servicesMap = [];
 
 			foreach ($config as $repositoryAlias => $repositoryConfig)
 			{
-				foreach ($repositoryConfig['services'] as $serviceAlias => $serviceConfig)
+				foreach (array_keys($repositoryConfig['services']) as $serviceAlias)
 				{
-					$serviceConfig['repository_alias'] = $repositoryAlias;
-					$mappers[$serviceAlias] = $serviceConfig;
+					$servicesMap[$serviceAlias] = $repositoryAlias;
 				}
 			}
 
-			$this->mappersConfig = $mappers;
+			$this->servicesMap = $servicesMap;
 		}
 
-		if (!isset($this->mappersConfig[$serviceName])) return null;
+		if (!isset($this->servicesMap[$serviceName])) return null;
 
-		return $this->mappersConfig[$serviceName];
+		return $this->servicesMap[$serviceName];
 	}
 }
