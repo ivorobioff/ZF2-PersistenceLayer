@@ -13,7 +13,10 @@ use Zend\ServiceManager\ServiceLocatorInterface;
 /**
  * @author Igor Vorobiov<igor.vorobioff@gmail.com>
  */
-abstract class AbstractMapper implements ServiceLocatorAwareInterface, MapperInterface
+abstract class AbstractMapper implements
+	ServiceLocatorAwareInterface,
+	MapperInterface,
+	EntityProducerInterface
 {
 	private $serviceLocator;
 	private $sqlObject;
@@ -31,11 +34,6 @@ abstract class AbstractMapper implements ServiceLocatorAwareInterface, MapperInt
 		$this->pkName = $pkName;
 		$this->adapter = $adapter;
 	}
-
-	/**
-	 * @return EntityInterface
-	 */
-	abstract public function createEntity();
 
 	public function getPkName()
 	{

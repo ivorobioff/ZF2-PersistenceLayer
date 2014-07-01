@@ -9,7 +9,7 @@ class ResultIterator extends \IteratorIterator
 {
 	private $repository;
 
-	public function __construct(\Traversable $iterator, AbstractMapper $repository)
+	public function __construct(\Traversable $iterator, EntityProducerInterface $repository)
 	{
 		parent::__construct($iterator);
 		$this->repository = $repository;
