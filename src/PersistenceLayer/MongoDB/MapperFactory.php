@@ -20,9 +20,9 @@ class MapperFactory implements RepositoryFactoryInterface, ServiceLocatorAwareIn
 		/**
 		 * @var \MongoClient $client
 		 */
-		$client = $config['client'];
+		$client = $this->getServiceLocator()->get($config['client']);
 		$collection = $client->selectCollection($config['database'], $repositoryConfig['table']);
-		$repository = $repositoryConfig['class']($collection);
+		$repository = new $repositoryConfig['class']($collection);
 		return $repository;
 	}
 

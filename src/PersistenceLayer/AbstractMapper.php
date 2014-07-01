@@ -1,6 +1,7 @@
 <?php
 namespace Developer\PersistenceLayer;
 
+use Developer\Stuff\Hydrators\ValuesBinder;
 use Zend\Db\Adapter\Adapter;
 use Zend\Db\Adapter\Driver\ResultInterface;
 use Zend\Db\Metadata\Metadata;
@@ -245,31 +246,15 @@ abstract class AbstractMapper implements ServiceLocatorAwareInterface, MapperInt
 
 	protected function prepareResult(ResultInterface $result)
 	{
-		$return = [];
-
-		foreach ($result as $row)
-		{
-			$return[] = $this->arrayToEntity($row);
-		}
-
-		return $return;
+		return new ResultIterator($result, $this);
 	}
 
 	protected function prepareRow(ResultInterface $result)
 	{
 		if (!$row = $result->current()) return null;
-		return $this->arrayToEntity($row);
-	}
+		$entity = $this->createEntity();
 
-	private function arrayToEntity(array $row)
-	{
-		$item = $this->createEntity();
-
-		foreach ($row as $name => $value)
-		{
-			$item->$name = $value;
-		}
-
-		return $item;
+		(new ValuesBinder())->hydrate($row, $entity);
+		return $entity;
 	}
 }
