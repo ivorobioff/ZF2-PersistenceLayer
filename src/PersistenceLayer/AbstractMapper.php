@@ -186,9 +186,20 @@ abstract class AbstractMapper implements ServiceLocatorAwareInterface, MapperInt
 		return $this->prepareRow($this->loadRawBy($where, $settings));
 	}
 
-	protected function loadAllBy(Where $where, QuerySettings $settings = null)
+	protected function loadAllBy(
+		Where $where,
+		QuerySettings $settings = null,
+		$returnIterator = false
+	)
 	{
-		return $this->prepareResult($this->loadRawBy($where, $settings));
+		$result = $this->loadRawBy($where, $settings);
+
+		if ($returnIterator)
+		{
+			return $this->prepareResultIterator($result);
+		}
+
+		return $this->prepareResultArray($result);
 	}
 
 	protected function deleteBy(Where $where)
@@ -226,7 +237,7 @@ abstract class AbstractMapper implements ServiceLocatorAwareInterface, MapperInt
 		$sql = $this->getSqlObject();
 		$select = $sql->select();
 		$statement = $sql->prepareStatementForSqlObject($select);
-		return $this->prepareResult($statement->execute());
+		return $this->prepareResultArray($statement->execute());
 	}
 
 	public function count()
@@ -244,7 +255,12 @@ abstract class AbstractMapper implements ServiceLocatorAwareInterface, MapperInt
 		$this->deleteBy($where);
 	}
 
-	protected function prepareResult(ResultInterface $result)
+	protected function prepareResultArray(ResultInterface $result)
+	{
+		return iterator_to_array($this->prepareResultIterator($result));
+	}
+
+	protected function prepareResultIterator(ResultInterface $result)
 	{
 		return new ResultIterator($result, $this);
 	}
