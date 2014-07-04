@@ -31,9 +31,35 @@ abstract class AbstractMapper implements MapperInterface, EntityProducerInterfac
 		return $this->collection;
 	}
 
+	/**
+	 * @param EntityInterface|AbstractEntity $entity
+	 * @throws \InvalidArgumentException
+	 * @throws \RuntimeException
+	 */
 	public function save(EntityInterface $entity)
 	{
-		$this->getCollection()->save($entity);
+		if (!$entity instanceof AbstractEntity)
+		{
+			throw new \InvalidArgumentException('Entity must be instance of AbstractEntity');
+		}
+
+		$data = (new ValuesBinder())->extract($entity);
+
+		if (isset($data['_id']))
+		{
+			unset($data['_id']);
+			$result = $this->getCollection()->update(['_id' => $entity->_id], $data);
+		}
+		else
+		{
+			$result = $this->getCollection()->insert($data);
+			$entity->_id = $data['_id'];
+		}
+
+		if ($result['ok'] != 1)
+		{
+			throw new \RuntimeException('MongoDB: '.$result['err']);
+		}
 	}
 
 	public function load($primKey)
