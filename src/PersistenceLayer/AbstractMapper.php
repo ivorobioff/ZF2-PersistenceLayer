@@ -238,6 +238,14 @@ abstract class AbstractMapper implements
 		return $this->prepareResultArray($statement->execute());
 	}
 
+	public function loadAllIterator()
+	{
+		$sql = $this->getSqlObject();
+		$select = $sql->select();
+		$statement = $sql->prepareStatementForSqlObject($select);
+		return $this->prepareResultIterator($statement->execute());
+	}
+
 	public function count()
 	{
 		$sql = $this->getSqlObject();
@@ -246,11 +254,14 @@ abstract class AbstractMapper implements
 		return $statement->execute()->count();
 	}
 
-	public function delete($primKey)
+	public function delete(EntityInterface $entity)
 	{
+		$primKey = $entity->{$this->getPkName()};
 		$where = new Where();
 		$where->equalTo($this->getPkName(), $primKey);
 		$this->deleteBy($where);
+
+		$entity->{$this->getPkName()} = null;
 	}
 
 	protected function prepareResultArray(ResultInterface $result)

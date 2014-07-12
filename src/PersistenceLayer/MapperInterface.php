@@ -10,5 +10,5 @@ interface MapperInterface
 	public function load($primKey);
 	public function loadAll();
 	public function count();
-	public function delete($primKey);
+	public function delete(EntityInterface $entity);
 } 

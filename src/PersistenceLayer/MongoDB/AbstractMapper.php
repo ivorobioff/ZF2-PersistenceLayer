@@ -77,7 +77,7 @@ abstract class AbstractMapper implements MapperInterface, EntityProducerInterfac
 		throw new NotImplementedException(__METHOD__);
 	}
 
-	public function delete($primKey)
+	public function delete(EntityInterface $entity)
 	{
 		throw new NotImplementedException(__METHOD__);
 	}
