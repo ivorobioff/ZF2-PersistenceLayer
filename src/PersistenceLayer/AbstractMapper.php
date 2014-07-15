@@ -1,9 +1,9 @@
 <?php
 namespace Developer\PersistenceLayer;
 
-use Developer\Stuff\Hydrators\ValuesBinder;
+use Developer\PersistenceLayer\Plugins\PluginsConfigAwareTrait;
+use Developer\PersistenceLayer\Plugins\PluginsProviderInterface;
 use Zend\Db\Adapter\Adapter;
-use Zend\Db\Adapter\Driver\ResultInterface;
 use Zend\Db\Metadata\Metadata;
 use Zend\Db\Sql\Sql;
 use Zend\Db\Sql\Where;
@@ -16,8 +16,13 @@ use Zend\ServiceManager\ServiceLocatorInterface;
 abstract class AbstractMapper implements
 	ServiceLocatorAwareInterface,
 	MapperInterface,
-	EntityProducerInterface
+	EntityProducerInterface,
+	PluginsProviderInterface,
+	SqlObjectProviderInterface
 {
+	use PluginsConfigAwareTrait;
+	use EasyQueryTrait;
+
 	private $serviceLocator;
 	private $sqlObject;
 
@@ -73,7 +78,7 @@ abstract class AbstractMapper implements
 	/**
 	 * @return Sql
 	 */
-	protected function getSqlObject()
+	public function getSqlObject()
 	{
 		if (is_null($this->sqlObject))
 		{
@@ -139,90 +144,6 @@ abstract class AbstractMapper implements
 		return $insert;
 	}
 
-	protected function loadRawBy(Where $where, QuerySettings $settings = null)
-	{
-		$sql = $this->getSqlObject();
-		$select = $sql->select();
-		$select->where($where);
-
-		if ($settings)
-		{
-			if ($settings->limit) $select->limit($settings->limit);
-			if ($settings->offset) $select->offset($settings->offset);
-			if ($settings->order) $select->order($settings->order);
-			if ($settings->group) $select->group($settings->group);
-		}
-
-		$statement = $sql->prepareStatementForSqlObject($select);
-		return $statement->execute();
-	}
-
-	protected function existsBy(Where $where)
-	{
-		$settings = new QuerySettings();
-		$settings->limit = 1;
-
-		$result = $this->loadRawBy($where, $settings);
-		return (bool) $result->current();
-	}
-
-	protected function countBy(Where $where)
-	{
-		$result = $this->loadRawBy($where);
-		return $result->count();
-	}
-
-	protected function loadBy(Where $where, QuerySettings $settings = null)
-	{
-		if ($settings === null)
-		{
-			$settings = new QuerySettings();
-		}
-
-		$settings->limit = 1;
-
-		return $this->prepareRow($this->loadRawBy($where, $settings));
-	}
-
-	protected function loadAllBy(
-		Where $where,
-		QuerySettings $settings = null,
-		$returnIterator = false
-	)
-	{
-		$result = $this->loadRawBy($where, $settings);
-
-		if ($returnIterator)
-		{
-			return $this->prepareResultIterator($result);
-		}
-
-		return $this->prepareResultArray($result);
-	}
-
-	protected function deleteBy(Where $where)
-	{
-		$sql = $this->getSqlObject();
-		$delete = $sql->delete();
-
-		$delete->where($where);
-
-		$statement = $sql->prepareStatementForSqlObject($delete);
-		$statement->execute();
-	}
-
-	protected function updateBy(Where $where, array $data)
-	{
-		$sql = $this->getSqlObject();
-		$update = $sql->update();
-
-		$update->where($where);
-		$update->set($data);
-
-		$statement = $sql->prepareStatementForSqlObject($update);
-		$statement->execute();
-	}
-
 	public function load($primKey)
 	{
 		$where = new Where();
@@ -264,22 +185,31 @@ abstract class AbstractMapper implements
 		$entity->{$this->getPkName()} = null;
 	}
 
-	protected function prepareResultArray(ResultInterface $result)
+	/**
+	 * @param $name
+	 * @return AbstractPlugin
+	 * @throws \BadMethodCallException
+	 */
+	public function getPlugin($name)
 	{
-		return iterator_to_array($this->prepareResultIterator($result));
-	}
+		$config = $this->getPluginsConfig();
 
-	protected function prepareResultIterator(ResultInterface $result)
-	{
-		return new ResultIterator($result, $this);
-	}
+		if (!isset($config[$name]))
+		{
+			throw new  \BadMethodCallException('Plugin "'.$name.'" does NOT exist');
+		}
 
-	protected function prepareRow(ResultInterface $result)
-	{
-		if (!$row = $result->current()) return null;
-		$entity = $this->createEntity();
+		/**
+		 * @var AbstractPlugin $plugin
+		 */
+		$plugin = new $config[$name]();
+		$plugin->setRepository($this);
 
-		(new ValuesBinder())->hydrate($row, $entity);
-		return $entity;
+		if ($plugin instanceof ServiceLocatorAwareInterface)
+		{
+			$plugin->setServiceLocator($this->getServiceLocator());
+		}
+
+		return $plugin;
 	}
 }

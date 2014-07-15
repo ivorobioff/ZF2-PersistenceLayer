@@ -1,6 +1,7 @@
 <?php
 namespace Developer\PersistenceLayer;
 
+use Developer\PersistenceLayer\Plugins\PluginsProviderInterface;
 use Zend\ServiceManager\AbstractFactoryInterface;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
@@ -38,24 +39,34 @@ class AbstractRepositoryFactory implements AbstractFactoryInterface
 	{
 		$config = $serviceLocator->get('Config')['repository'];
 		$repositoryAlias = $this->findRepositoryAliasByServiceName($requestedName, $config);
-		$repositoryConfig = $config[$repositoryAlias];
+		$commonConfig = $config[$repositoryAlias];
 
 		/**
 		 * @var RepositoryFactoryInterface|ServiceLocatorAwareInterface $factory
 		 */
 
-		$factory = new $repositoryConfig['factory']();
+		$factory = new $commonConfig['factory']();
 
 		if ($factory instanceof ServiceLocatorAwareInterface)
 		{
 			$factory->setServiceLocator($serviceLocator);
 		}
 
-		return $factory->createRepository(
+		$repositoryConfig = $commonConfig['services'][$requestedName];
+
+		$repository = $factory->createRepository(
 			$requestedName,
-			$repositoryConfig['services'][$requestedName],
-			$repositoryConfig
+			$repositoryConfig,
+			$commonConfig
 		);
+
+		if ($repository instanceof PluginsProviderInterface)
+		{
+			$pluginsConfig = isset($repositoryConfig['plugins']) ? $repositoryConfig['plugins'] : [];
+			$repository->setPluginsConfig($pluginsConfig);
+		}
+
+		return $repository;
 	}
 
 	private function findRepositoryAliasByServiceName($serviceName, array $config)
