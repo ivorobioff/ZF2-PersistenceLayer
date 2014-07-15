@@ -11,6 +11,9 @@ trait EasyQueryTrait
 {
 	protected function loadRawBy(Where $where, QuerySettings $settings = null)
 	{
+		/**
+		 * @var SqlObjectProviderInterface $this
+		 */
 		$sql = $this->getSqlObject();
 		$select = $sql->select();
 		$select->where($where);
@@ -72,6 +75,9 @@ trait EasyQueryTrait
 
 	protected function deleteBy(Where $where)
 	{
+		/**
+		 * @var SqlObjectProviderInterface $this
+		 */
 		$sql = $this->getSqlObject();
 		$delete = $sql->delete();
 
@@ -83,6 +89,9 @@ trait EasyQueryTrait
 
 	protected function updateBy(Where $where, array $data)
 	{
+		/**
+		 * @var SqlObjectProviderInterface $this
+		 */
 		$sql = $this->getSqlObject();
 		$update = $sql->update();
 
@@ -105,6 +114,9 @@ trait EasyQueryTrait
 
 	protected function prepareRow(ResultInterface $result)
 	{
+		/**
+		 * @var EntityProducerInterface $this
+		 */
 		if (!$row = $result->current()) return null;
 		$entity = $this->createEntity();
 

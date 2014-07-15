@@ -159,14 +159,6 @@ abstract class AbstractMapper implements
 		return $this->prepareResultArray($statement->execute());
 	}
 
-	public function loadAllIterator()
-	{
-		$sql = $this->getSqlObject();
-		$select = $sql->select();
-		$statement = $sql->prepareStatementForSqlObject($select);
-		return $this->prepareResultIterator($statement->execute());
-	}
-
 	public function count()
 	{
 		$sql = $this->getSqlObject();
