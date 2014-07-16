@@ -39,11 +39,27 @@ class MultipleInsertCommand
 		$values = '';
 		foreach ($data as $row)
 		{
-			$values .= ',('.$platform->quoteValueList(array_values($row)).')';
+			$values .= ',('.$this->quoteValueList(array_values($row)).')';
 		}
 
 		$values = ltrim($values, ',');
 
 		return 'INSERT INTO '.$quotedTable.' ('.$fields.') VALUES '.$values;
+	}
+
+	/**
+	 * The original method has a bug, so it is the alternative for it
+	 * @param array $valueList
+	 * @return string
+	 */
+	private function quoteValueList($valueList)
+	{
+		$platform = $this->adapter->getPlatform();
+
+		foreach ($valueList as $key => $value)
+		{
+			$valueList[$key] = $platform->quoteValue($value);
+		}
+		return implode(', ', $valueList);
 	}
 } 
