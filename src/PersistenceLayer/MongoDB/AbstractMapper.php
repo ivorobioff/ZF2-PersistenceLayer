@@ -69,7 +69,9 @@ abstract class AbstractMapper implements MapperInterface, EntityProducerInterfac
 
 	public function loadAll()
 	{
-		throw new NotImplementedException(__METHOD__);
+		$result = $this->getCollection()->find();
+		$result->sort(['_id' => 1]);
+		return $this->prepareResult($result);
 	}
 
 	public function count()

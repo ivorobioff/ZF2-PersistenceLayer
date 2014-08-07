@@ -7,5 +7,12 @@ use Developer\PersistenceLayer\EntityInterface;
  */
 abstract class AbstractEntity implements EntityInterface
 {
+	/**
+	 * @var \MongoId
+	 */
 	public $_id;
+	public function getId()
+	{
+		return $this->_id->{'$id'};
+	}
 } 
