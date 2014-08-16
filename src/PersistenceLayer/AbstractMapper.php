@@ -3,6 +3,8 @@ namespace Developer\PersistenceLayer;
 
 use Developer\PersistenceLayer\Cache\CacheManagerAwareTrait;
 use Developer\PersistenceLayer\Cache\CacheManagerAwareInterface;
+use Developer\PersistenceLayer\Cache\StaticCacheManagerAwareInterface;
+use Developer\PersistenceLayer\Cache\StaticCacheManagerAwareTrait;
 use Developer\PersistenceLayer\Plugins\PluginsConfigAwareTrait;
 use Developer\PersistenceLayer\Plugins\PluginsProviderInterface;
 use Zend\Db\Adapter\Adapter;
@@ -21,11 +23,13 @@ abstract class AbstractMapper implements
 	EntityProducerInterface,
 	PluginsProviderInterface,
 	SqlObjectProviderInterface,
-	CacheManagerAwareInterface
+	CacheManagerAwareInterface,
+	StaticCacheManagerAwareInterface
 {
 	use PluginsConfigAwareTrait;
 	use EasyQueryTrait;
 	use CacheManagerAwareTrait;
+	use StaticCacheManagerAwareTrait;
 
 	private $serviceLocator;
 	private $sqlObject;
