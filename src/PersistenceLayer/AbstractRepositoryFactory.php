@@ -3,6 +3,7 @@ namespace Developer\PersistenceLayer;
 
 use Developer\PersistenceLayer\Cache\CacheManager;
 use Developer\PersistenceLayer\Cache\CacheManagerAwareInterface;
+use Developer\PersistenceLayer\Cache\CacheManagerFactory;
 use Developer\PersistenceLayer\Plugins\PluginsProviderInterface;
 use Zend\ServiceManager\AbstractFactoryInterface;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
@@ -70,7 +71,8 @@ class AbstractRepositoryFactory implements AbstractFactoryInterface
 
 		if ($repository instanceof CacheManagerAwareInterface)
 		{
-			$cacheManager = new CacheManager();
+			$cacheManagerFactory = new CacheManagerFactory();
+			$cacheManager = $cacheManagerFactory->createService($serviceLocator);
 			$cacheManager->setRepository($repository);
 			$repository->setCacheManager($cacheManager);
 		}
