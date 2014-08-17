@@ -6,6 +6,8 @@ namespace Developer\PersistenceLayer\Cache\Strategy;
  */
 class StaticStrategy implements StrategyInterface
 {
+	use ArgumentsHashCapableTrait;
+
 	protected $storage = [];
 
 	public function has($method, array $args)
@@ -20,7 +22,7 @@ class StaticStrategy implements StrategyInterface
 
 	public function add($method, array $args, $value)
 	{
-		$this->storage[$method] = [$this->prepareArgHash($args) => $value];
+		$this->storage[$method][$this->prepareArgHash($args)] = $value;
 	}
 
 	public function clear($method, array $args)
@@ -36,12 +38,7 @@ class StaticStrategy implements StrategyInterface
 		}
 		else
 		{
-			unset($this->storage);
+			$this->storage = [];
 		}
-	}
-
-	private function prepareArgHash(array $args)
-	{
-		return md5(serialize($args));
 	}
 }
