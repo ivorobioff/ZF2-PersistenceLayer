@@ -6,10 +6,10 @@ namespace Developer\PersistenceLayer\Cache;
  */
 interface StaticCacheManagerAwareInterface
 {
-	public function setStaticCacheManager(CacheManagerInterface $cacheManager);
+	public function setStaticCacheManager(StaticCacheManager $cacheManager);
 
 	/**
-	 * @return CacheManagerInterface
+	 * @return StaticCacheManager
 	 */
 	public function getStaticCacheManager();
 } 

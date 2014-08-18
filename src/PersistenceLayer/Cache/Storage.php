@@ -1,18 +1,21 @@
 <?php
-namespace Developer\PersistenceLayer\Cache\Strategy;
+namespace Developer\PersistenceLayer\Cache;
 
 /**
  * @author Igor Vorobiov<igor.vorobioff@gmail.com>
  */
-class StaticStrategy implements StrategyInterface
+class Storage 
 {
-	use ArgumentsHashCapableTrait;
-
 	protected $storage = [];
 
 	public function has($method, array $args)
 	{
-		return isset($this->storage[$method][$this->prepareArgHash($args)]);
+		if (!isset($this->storage[$method]))
+		{
+			return false;
+		}
+
+		return array_key_exists($this->prepareArgHash($args), $this->storage[$method]);
 	}
 
 	public function get($method, array $args)
@@ -41,4 +44,9 @@ class StaticStrategy implements StrategyInterface
 			$this->storage = [];
 		}
 	}
-}
+
+	private function prepareArgHash(array $args)
+	{
+		return md5(serialize($args));
+	}
+} 

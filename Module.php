@@ -25,10 +25,6 @@ class Module implements AutoloaderProviderInterface, ConfigProviderInterface
 				]
 			],
 
-			'cache_manager' => [
-				'strategy' => 'Developer\PersistenceLayer\Cache\Strategy\SessionStrategy',
-			],
-
 			'service_manager' => [
 				'abstract_factories' => [
 					'Developer\PersistenceLayer\AbstractRepositoryFactory',

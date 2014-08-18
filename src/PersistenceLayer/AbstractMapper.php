@@ -1,8 +1,6 @@
 <?php
 namespace Developer\PersistenceLayer;
 
-use Developer\PersistenceLayer\Cache\CacheManagerAwareTrait;
-use Developer\PersistenceLayer\Cache\CacheManagerAwareInterface;
 use Developer\PersistenceLayer\Cache\StaticCacheManagerAwareInterface;
 use Developer\PersistenceLayer\Cache\StaticCacheManagerAwareTrait;
 use Developer\PersistenceLayer\Plugins\PluginsConfigAwareTrait;
@@ -23,12 +21,10 @@ abstract class AbstractMapper implements
 	EntityProducerInterface,
 	PluginsProviderInterface,
 	SqlObjectProviderInterface,
-	CacheManagerAwareInterface,
 	StaticCacheManagerAwareInterface
 {
 	use PluginsConfigAwareTrait;
 	use EasyQueryTrait;
-	use CacheManagerAwareTrait;
 	use StaticCacheManagerAwareTrait;
 
 	private $serviceLocator;

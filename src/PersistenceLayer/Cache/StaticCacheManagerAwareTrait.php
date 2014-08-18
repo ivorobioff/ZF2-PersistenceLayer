@@ -9,14 +9,14 @@ trait StaticCacheManagerAwareTrait
 	private $staticCacheManager;
 
 	/**
-	 * @return CacheManager
+	 * @return StaticCacheManager
 	 */
 	public function getStaticCacheManager()
 	{
 		return $this->staticCacheManager;
 	}
 
-	public function setStaticCacheManager(CacheManagerInterface $cacheManager)
+	public function setStaticCacheManager(StaticCacheManager $cacheManager)
 	{
 		return $this->staticCacheManager = $cacheManager;
 	}
