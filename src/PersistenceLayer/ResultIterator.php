@@ -1,6 +1,7 @@
 <?php
 namespace Developer\PersistenceLayer;
-use Developer\Stuff\Hydrators\ValuesBinder;
+
+use Zend\Stdlib\Hydrator\ObjectProperty;
 
 /**
  * @author Igor Vorobiov<igor.vorobioff@gmail.com>
@@ -18,7 +19,8 @@ class ResultIterator extends \IteratorIterator implements \Countable
 	public function current()
 	{
 		$entity = $this->repository->createEntity();
-		(new ValuesBinder())->hydrate(parent::current(), $entity);
+		$hydrator = new ObjectProperty();
+		$hydrator->hydrate(parent::current(), $entity);
 		return $entity;
 	}
 

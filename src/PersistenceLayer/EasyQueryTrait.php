@@ -1,9 +1,10 @@
 <?php
 namespace Developer\PersistenceLayer;
-use Developer\Stuff\Hydrators\ValuesBinder;
+
 use Zend\Db\Adapter\Driver\ResultInterface;
 use Zend\Db\Sql\Expression;
 use Zend\Db\Sql\Where;
+use Zend\Stdlib\Hydrator\ObjectProperty;
 
 /**
  * @author Igor Vorobiov<igor.vorobioff@gmail.com>
@@ -126,7 +127,9 @@ trait EasyQueryTrait
 		if (!$row = $result->current()) return null;
 		$entity = $this->createEntity();
 
-		(new ValuesBinder())->hydrate($row, $entity);
+		$hydrator = new ObjectProperty();
+		$hydrator->hydrate($row, $entity);
+
 		return $entity;
 	}
 } 
