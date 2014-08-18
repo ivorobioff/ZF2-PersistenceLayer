@@ -2,6 +2,7 @@
 namespace Developer\PersistenceLayer;
 use Developer\Stuff\Hydrators\ValuesBinder;
 use Zend\Db\Adapter\Driver\ResultInterface;
+use Zend\Db\Sql\Expression;
 use Zend\Db\Sql\Where;
 
 /**
@@ -32,17 +33,22 @@ trait EasyQueryTrait
 
 	protected function existsBy(Where $where)
 	{
-		$settings = new QuerySettings();
-		$settings->limit = 1;
-
-		$result = $this->loadRawBy($where, $settings);
-		return (bool) $result->current();
+		return (bool) $this->countBy($where);
 	}
 
 	protected function countBy(Where $where)
 	{
-		$result = $this->loadRawBy($where);
-		return $result->count();
+		/**
+		 * @var SqlObjectProviderInterface $this
+		 */
+		$sql = $this->getSqlObject();
+		$select = $sql->select();
+		$select->where($where);
+		$select->limit(1);
+		$select->columns(['count' => new Expression('COUNT(*)')]);
+		$statement = $sql->prepareStatementForSqlObject($select);
+		$result = $statement->execute()->current();
+		return $result['count'];
 	}
 
 	protected function loadBy(Where $where, QuerySettings $settings = null)

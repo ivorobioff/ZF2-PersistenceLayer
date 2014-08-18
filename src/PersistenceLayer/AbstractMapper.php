@@ -7,6 +7,7 @@ use Developer\PersistenceLayer\Plugins\PluginsConfigAwareTrait;
 use Developer\PersistenceLayer\Plugins\PluginsProviderInterface;
 use Zend\Db\Adapter\Adapter;
 use Zend\Db\Metadata\Metadata;
+use Zend\Db\Sql\Expression;
 use Zend\Db\Sql\Sql;
 use Zend\Db\Sql\Where;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
@@ -155,11 +156,34 @@ abstract class AbstractMapper implements
 		return $this->loadBy($where);
 	}
 
-	public function loadAll()
+	/**
+	 * @param null $offset
+	 * @param null $limit
+	 * @param bool $returnIterator
+	 * @return array|ResultIterator
+	 */
+	public function loadAll($offset = null, $limit = null, $returnIterator = false)
 	{
 		$sql = $this->getSqlObject();
 		$select = $sql->select();
+
+		if ($offset !== null)
+		{
+			$select->offset($offset);
+		}
+
+		if ($limit !== null)
+		{
+			$select->limit($limit);
+		}
+
 		$statement = $sql->prepareStatementForSqlObject($select);
+
+		if ($returnIterator === true)
+		{
+			return $this->prepareResultIterator($statement->execute());
+		}
+
 		return $this->prepareResultArray($statement->execute());
 	}
 
@@ -167,8 +191,11 @@ abstract class AbstractMapper implements
 	{
 		$sql = $this->getSqlObject();
 		$select = $sql->select();
+		$select->columns(['count' => new Expression('COUNT(*)')]);
+		$select->limit(1);
 		$statement = $sql->prepareStatementForSqlObject($select);
-		return $statement->execute()->count();
+		$result = $statement->execute()->current();
+		return $result['count'];
 	}
 
 	public function delete(EntityInterface $entity)

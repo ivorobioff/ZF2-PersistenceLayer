@@ -5,7 +5,7 @@ use Developer\Stuff\Hydrators\ValuesBinder;
 /**
  * @author Igor Vorobiov<igor.vorobioff@gmail.com>
  */
-class ResultIterator extends \IteratorIterator
+class ResultIterator extends \IteratorIterator implements \Countable
 {
 	private $repository;
 
@@ -20,5 +20,17 @@ class ResultIterator extends \IteratorIterator
 		$entity = $this->repository->createEntity();
 		(new ValuesBinder())->hydrate(parent::current(), $entity);
 		return $entity;
+	}
+
+	public function count()
+	{
+		$innerIterator = $this->getInnerIterator();
+
+		if (!$innerIterator instanceof \Countable)
+		{
+			throw new \RuntimeException('Result iterator is not countable');
+		}
+
+		return $innerIterator->count();
 	}
 } 
