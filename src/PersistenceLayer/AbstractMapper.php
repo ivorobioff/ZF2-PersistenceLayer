@@ -157,33 +157,13 @@ abstract class AbstractMapper implements
 	}
 
 	/**
-	 * @param null $offset
-	 * @param null $limit
-	 * @param bool $returnIterator
-	 * @return array|ResultIterator
+	 * @return array
 	 */
-	public function loadAll($offset = null, $limit = null, $returnIterator = false)
+	public function loadAll()
 	{
 		$sql = $this->getSqlObject();
 		$select = $sql->select();
-
-		if ($offset !== null)
-		{
-			$select->offset($offset);
-		}
-
-		if ($limit !== null)
-		{
-			$select->limit($limit);
-		}
-
 		$statement = $sql->prepareStatementForSqlObject($select);
-
-		if ($returnIterator === true)
-		{
-			return $this->prepareResultIterator($statement->execute());
-		}
-
 		return $this->prepareResultArray($statement->execute());
 	}
 
