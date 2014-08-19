@@ -34,7 +34,11 @@ trait EasyQueryTrait
 
 	protected function existsBy(Where $where)
 	{
-		return (bool) $this->countBy($where);
+		$settings = new QuerySettings();
+		$settings->limit = 1;
+		
+		$result = $this->loadRawBy($where, $settings);
+		return (bool) $result->current();
 	}
 
 	protected function countBy(Where $where)
