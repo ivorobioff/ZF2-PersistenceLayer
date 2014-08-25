@@ -3,10 +3,10 @@ namespace Developer\PersistenceLayer;
 
 use Developer\PersistenceLayer\Cache\StaticCacheManagerAwareInterface;
 use Developer\PersistenceLayer\Cache\StaticCacheManagerAwareTrait;
+use Developer\PersistenceLayer\DisposableRequest\DisposableRequestInterface;
 use Developer\PersistenceLayer\Plugins\PluginsConfigAwareTrait;
 use Developer\PersistenceLayer\Plugins\PluginsProviderInterface;
 use Zend\Db\Adapter\Adapter;
-use Zend\Db\Metadata\Metadata;
 use Zend\Db\Sql\Expression;
 use Zend\Db\Sql\Sql;
 use Zend\Db\Sql\Where;
@@ -22,7 +22,8 @@ abstract class AbstractMapper implements
 	EntityProducerInterface,
 	PluginsProviderInterface,
 	SqlObjectProviderInterface,
-	StaticCacheManagerAwareInterface
+	StaticCacheManagerAwareInterface,
+	DisposableRequestCapableInterface
 {
 	use PluginsConfigAwareTrait;
 	use EasyQueryTrait;
@@ -98,35 +99,33 @@ abstract class AbstractMapper implements
 
 	public function save(EntityInterface $entity)
 	{
-		$metadata = new Metadata($this->getAdapter());
-		$column_names = $metadata->getColumnNames($this->getSqlObject()->getTable());
+		$values = $entity->getArrayCopy();
 
-		$values = [];
+		$pkValue = null;
 
-		foreach ($column_names as $name)
+		if (isset($values[$this->getPkName()]))
 		{
-			if ($name == $this->getPkName()) continue ;
-			$values[$name] = $entity->$name;
+			$pkValue = $values[$this->getPkName()];
 		}
 
-		$isInsert = $entity->{$this->getPkName()} === null;
+		unset($values[$this->getPkName()]);
 
-		if ($isInsert)
+		if ($pkValue === null)
 		{
 			$query = $this->prepareInsert($values);
 		}
 		else
 		{
-			$query = $this->prepareUpdate($values, $entity->{$this->getPkName()});
+			$query = $this->prepareUpdate($values, $pkValue);
 		}
 
 		$statement = $this->getSqlObject()->prepareStatementForSqlObject($query);
 		$result = $statement->execute();
 
-		if ($isInsert)
+		if ($pkValue === null)
 		{
 			$id = $result->getGeneratedValue();
-			$entity->{$this->getPkName()} = $id;
+			$entity->exchangeArray([$this->getPkName() => $id]);
 		}
 	}
 
@@ -214,5 +213,15 @@ abstract class AbstractMapper implements
 		}
 
 		return $plugin;
+	}
+
+	/**
+	 * @param DisposableRequestInterface|RepositoryAwareInterface $request
+	 * @return mixed
+	 */
+	public function executeDisposableRequest(DisposableRequestInterface $request)
+	{
+		$request->setRepository($this);
+		return $request->getResult();
 	}
 }

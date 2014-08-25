@@ -6,5 +6,6 @@ namespace Developer\PersistenceLayer;
  */
 interface EntityInterface 
 {
-	//
+	public function exchangeArray($data);
+	public function getArrayCopy();
 } 

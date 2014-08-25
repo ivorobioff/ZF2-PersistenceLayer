@@ -43,17 +43,18 @@ abstract class AbstractMapper implements MapperInterface, EntityProducerInterfac
 			throw new \InvalidArgumentException('Entity must be instance of AbstractEntity');
 		}
 
-		$data = (new ValuesBinder())->extract($entity);
+		$data = $entity->getArrayCopy();
 
 		if (isset($data['_id']))
 		{
+			$_id = $data['_id'];
 			unset($data['_id']);
-			$result = $this->getCollection()->update(['_id' => $entity->_id], $data);
+			$result = $this->getCollection()->update(['_id' => $_id], $data);
 		}
 		else
 		{
 			$result = $this->getCollection()->insert($data);
-			$entity->_id = $data['_id'];
+			$entity->exchangeArray(['_id' => $data['_id']]);
 		}
 
 		if ($result['ok'] != 1)
