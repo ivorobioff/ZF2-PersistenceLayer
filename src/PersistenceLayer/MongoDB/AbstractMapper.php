@@ -4,7 +4,7 @@ namespace Developer\PersistenceLayer\MongoDB;
 use Developer\PersistenceLayer\EntityInterface;
 use Developer\PersistenceLayer\EntityProducerInterface;
 use Developer\PersistenceLayer\MapperInterface;
-use Developer\PersistenceLayer\StorageProviderEntityInterface;
+use Developer\PersistenceLayer\StoragableEntityInterface;
 use Developer\PersistenceLayer\ResultFactory;
 use Developer\Stuff\Exceptions\NotImplementedException;
 use Zend\Stdlib\Hydrator\ObjectProperty;
@@ -58,7 +58,7 @@ abstract class AbstractMapper implements MapperInterface, EntityProducerInterfac
 
 		$object = $entity;
 
-		if ($entity instanceof StorageProviderEntityInterface)
+		if ($entity instanceof StoragableEntityInterface)
 		{
 			$object = $entity->getStorage();
 		}

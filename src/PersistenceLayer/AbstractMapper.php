@@ -84,7 +84,7 @@ abstract class AbstractMapper extends BaseSqlMapper implements
 	{
 		$object = $entity;
 
-		if ($entity instanceof StorageProviderEntityInterface)
+		if ($entity instanceof StoragableEntityInterface)
 		{
 			$object = $entity->getStorage();
 		}

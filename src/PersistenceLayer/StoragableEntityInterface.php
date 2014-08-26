@@ -4,7 +4,7 @@ namespace Developer\PersistenceLayer;
 /**
  * @author Igor Vorobiov<igor.vorobioff@gmail.com>
  */
-interface StorageProviderEntityInterface extends EntityInterface
+interface StoragableEntityInterface extends EntityInterface
 {
 	/**
 	 * @return object
