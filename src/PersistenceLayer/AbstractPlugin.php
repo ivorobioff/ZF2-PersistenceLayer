@@ -1,17 +1,15 @@
 <?php
 namespace Developer\PersistenceLayer;
 use Developer\PersistenceLayer\Plugins\PluginInterface;
+use Zend\ServiceManager\ServiceLocatorAwareInterface;
 use Zend\ServiceManager\ServiceLocatorAwareTrait;
 
 /**
  * @author Igor Vorobiov<igor.vorobioff@gmail.com>
  */
-abstract class AbstractPlugin implements
-	PluginInterface,
-	EntityProducerInterface,
-	SqlObjectProviderInterface
+abstract class AbstractPlugin extends BaseSqlMapper implements PluginInterface, ServiceLocatorAwareInterface
 {
-	use EasyQueryTrait;
+	use ServiceLocatorAwareTrait;
 
 	private $repository;
 
@@ -31,6 +29,11 @@ abstract class AbstractPlugin implements
 	public function createEntity()
 	{
 		return $this->getRepository()->createEntity();
+	}
+
+	public function getHydrator()
+	{
+		return $this->getRepository()->getHydrator();
 	}
 
 	public function getSqlObject()

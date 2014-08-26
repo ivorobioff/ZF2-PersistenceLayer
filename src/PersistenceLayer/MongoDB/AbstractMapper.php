@@ -4,9 +4,11 @@ namespace Developer\PersistenceLayer\MongoDB;
 use Developer\PersistenceLayer\EntityInterface;
 use Developer\PersistenceLayer\EntityProducerInterface;
 use Developer\PersistenceLayer\MapperInterface;
-use Developer\PersistenceLayer\ResultIterator;
+use Developer\PersistenceLayer\StorageProviderEntityInterface;
+use Developer\PersistenceLayer\ResultFactory;
 use Developer\Stuff\Exceptions\NotImplementedException;
-use Developer\Stuff\Hydrators\ValuesBinder;
+use Zend\Stdlib\Hydrator\ObjectProperty;
+
 
 /**
  * @author Igor Vorobiov<igor.vorobioff@gmail.com>
@@ -18,9 +20,20 @@ abstract class AbstractMapper implements MapperInterface, EntityProducerInterfac
 	 */
 	private $collection;
 
+	/**
+	 * @var ResultFactory
+	 */
+	private $resultFactory;
+
 	public function __construct(\MongoCollection $collection)
 	{
 		$this->collection = $collection;
+		$this->resultFactory = new ResultFactory($this);
+	}
+
+	public function getHydrator()
+	{
+		return new ObjectProperty();
 	}
 
 	/**
@@ -43,7 +56,15 @@ abstract class AbstractMapper implements MapperInterface, EntityProducerInterfac
 			throw new \InvalidArgumentException('Entity must be instance of AbstractEntity');
 		}
 
-		$data = $entity->getArrayCopy();
+		$object = $entity;
+
+		if ($entity instanceof StorageProviderEntityInterface)
+		{
+			$object = $entity->getStorage();
+		}
+
+		$hydrator = $this->getHydrator();
+		$data = $hydrator->extract($object);
 
 		if (isset($data['_id']))
 		{
@@ -54,7 +75,7 @@ abstract class AbstractMapper implements MapperInterface, EntityProducerInterfac
 		else
 		{
 			$result = $this->getCollection()->insert($data);
-			$entity->exchangeArray(['_id' => $data['_id']]);
+			$hydrator->hydrate(['_id' => $data['_id']], $object);
 		}
 
 		if ($result['ok'] != 1)
@@ -85,27 +106,14 @@ abstract class AbstractMapper implements MapperInterface, EntityProducerInterfac
 		throw new NotImplementedException(__METHOD__);
 	}
 
-	/**
-	 * @param $result
-	 * @return EntityInterface|null
-	 */
-	protected function prepareRow($result)
-	{
-		if ($result === null) return null;
-
-		$entity = $this->createEntity();
-		(new ValuesBinder())->hydrate($result, $entity);
-
-		return $entity;
-	}
-
-	/**
-	 * @param $result
-	 * @return ResultIterator|null
-	 */
 	protected function prepareResult($result)
 	{
+		return $this->resultFactory->prepareResultIterator($result);
+	}
+
+	protected function prepareRow(array $result = null)
+	{
 		if ($result === null) return null;
-		return new ResultIterator($result, $this);
+		return $this->resultFactory->prepareRow($result);
 	}
 }

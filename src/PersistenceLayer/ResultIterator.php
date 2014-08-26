@@ -1,27 +1,22 @@
 <?php
 namespace Developer\PersistenceLayer;
 
-use Zend\Stdlib\Hydrator\ObjectProperty;
-
 /**
  * @author Igor Vorobiov<igor.vorobioff@gmail.com>
  */
 class ResultIterator extends \IteratorIterator implements \Countable
 {
-	private $repository;
+	private $entityProducer;
 
-	public function __construct(\Traversable $iterator, EntityProducerInterface $repository)
+	public function __construct(\Traversable $iterator, EntityProducerInterface $entityProducer)
 	{
 		parent::__construct($iterator);
-		$this->repository = $repository;
+		$this->entityProducer = $entityProducer;
 	}
 
 	public function current()
 	{
-		$entity = $this->repository->createEntity();
-		$hydrator = new ObjectProperty();
-		$hydrator->hydrate(parent::current(), $entity);
-		return $entity;
+		return ResultFactory::produceEntityFromArray(parent::current(), $this->entityProducer);
 	}
 
 	public function count()

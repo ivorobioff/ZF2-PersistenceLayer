@@ -11,25 +11,23 @@ use Zend\Db\Sql\Expression;
 use Zend\Db\Sql\Sql;
 use Zend\Db\Sql\Where;
 use Zend\ServiceManager\ServiceLocatorAwareInterface;
-use Zend\ServiceManager\ServiceLocatorInterface;
+use Zend\ServiceManager\ServiceLocatorAwareTrait;
+use Zend\Stdlib\Hydrator\ObjectProperty;
 
 /**
  * @author Igor Vorobiov<igor.vorobioff@gmail.com>
  */
-abstract class AbstractMapper implements
-	ServiceLocatorAwareInterface,
+abstract class AbstractMapper extends BaseSqlMapper implements
 	MapperInterface,
-	EntityProducerInterface,
+	ServiceLocatorAwareInterface,
 	PluginsProviderInterface,
-	SqlObjectProviderInterface,
 	StaticCacheManagerAwareInterface,
 	DisposableRequestCapableInterface
 {
+	use ServiceLocatorAwareTrait;
 	use PluginsConfigAwareTrait;
-	use EasyQueryTrait;
 	use StaticCacheManagerAwareTrait;
 
-	private $serviceLocator;
 	private $sqlObject;
 
 	/**
@@ -46,6 +44,11 @@ abstract class AbstractMapper implements
 		$this->adapter = $adapter;
 	}
 
+	public function getHydrator()
+	{
+		return new ObjectProperty();
+	}
+
 	public function getPkName()
 	{
 		return $this->pkName;
@@ -59,26 +62,6 @@ abstract class AbstractMapper implements
 	public function getAdapter()
 	{
 		return $this->adapter;
-	}
-
-	/**
-	 * Set service locator
-	 *
-	 * @param ServiceLocatorInterface $serviceLocator
-	 */
-	public function setServiceLocator(ServiceLocatorInterface $serviceLocator)
-	{
-		$this->serviceLocator = $serviceLocator;
-	}
-
-	/**
-	 * Get service locator
-	 *
-	 * @return ServiceLocatorInterface
-	 */
-	public function getServiceLocator()
-	{
-		return $this->serviceLocator;
 	}
 
 	/**
@@ -99,15 +82,17 @@ abstract class AbstractMapper implements
 
 	public function save(EntityInterface $entity)
 	{
-		$values = $entity->getArrayCopy();
+		$object = $entity;
 
-		$pkValue = null;
-
-		if (isset($values[$this->getPkName()]))
+		if ($entity instanceof StorageProviderEntityInterface)
 		{
-			$pkValue = $values[$this->getPkName()];
+			$object = $entity->getStorage();
 		}
 
+		$hydrator = $this->getHydrator();
+		$values = $hydrator->extract($object);
+
+		$pkValue = $values[$this->getPkName()];
 		unset($values[$this->getPkName()]);
 
 		if ($pkValue === null)
@@ -125,7 +110,7 @@ abstract class AbstractMapper implements
 		if ($pkValue === null)
 		{
 			$id = $result->getGeneratedValue();
-			$entity->exchangeArray([$this->getPkName() => $id]);
+			$hydrator->hydrate([$this->getPkName() => $id], $object);
 		}
 	}
 
@@ -202,7 +187,7 @@ abstract class AbstractMapper implements
 		}
 
 		/**
-		 * @var AbstractPlugin $plugin
+		 * @var AbstractPlugin|ServiceLocatorAwareInterface $plugin
 		 */
 		$plugin = new $config[$name]();
 		$plugin->setRepository($this);

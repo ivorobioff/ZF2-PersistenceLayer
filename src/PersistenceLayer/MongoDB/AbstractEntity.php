@@ -15,27 +15,4 @@ abstract class AbstractEntity implements EntityInterface
 	{
 		return $this->_id->{'$id'};
 	}
-
-	public function exchangeArray($data)
-	{
-		foreach ($data as $name => $value)
-		{
-			$this->{$name} = $value;
-		}
-	}
-
-	public function getArrayCopy()
-	{
-		$propertiesArray = [];
-
-		$refObject = new \ReflectionObject($this);
-		$refProperties = $refObject->getProperties(\ReflectionProperty::IS_PUBLIC);
-
-		foreach ($refProperties as $refProperty)
-		{
-			$propertiesArray[$refProperty->getName()] = $refProperty->getValue($this);
-		}
-
-		return $propertiesArray;
-	}
-}
+} 

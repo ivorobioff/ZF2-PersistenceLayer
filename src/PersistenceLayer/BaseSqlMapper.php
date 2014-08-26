@@ -1,21 +1,33 @@
 <?php
 namespace Developer\PersistenceLayer;
 
-use Zend\Db\Adapter\Driver\ResultInterface;
 use Zend\Db\Sql\Expression;
 use Zend\Db\Sql\Where;
-use Zend\Stdlib\Hydrator\ObjectProperty;
 
 /**
  * @author Igor Vorobiov<igor.vorobioff@gmail.com>
  */
-trait EasyQueryTrait 
+abstract class BaseSqlMapper implements
+	EntityProducerInterface,
+	SqlObjectProviderInterface
 {
+	private $resultFactory;
+
+	/**
+	 * @return ResultFactory
+	 */
+	protected function getResultFactory()
+	{
+		if (is_null($this->resultFactory))
+		{
+			$this->resultFactory = new ResultFactory($this);
+		}
+
+		return $this->resultFactory;
+	}
+
 	protected function loadRawBy(Where $where, QuerySettings $settings = null)
 	{
-		/**
-		 * @var SqlObjectProviderInterface $this
-		 */
 		$sql = $this->getSqlObject();
 		$select = $sql->select();
 		$select->where($where);
@@ -36,16 +48,13 @@ trait EasyQueryTrait
 	{
 		$settings = new QuerySettings();
 		$settings->limit = 1;
-		
+
 		$result = $this->loadRawBy($where, $settings);
 		return (bool) $result->current();
 	}
 
 	protected function countBy(Where $where)
 	{
-		/**
-		 * @var SqlObjectProviderInterface $this
-		 */
 		$sql = $this->getSqlObject();
 		$select = $sql->select();
 		$select->where($where);
@@ -65,7 +74,11 @@ trait EasyQueryTrait
 
 		$settings->limit = 1;
 
-		return $this->prepareRow($this->loadRawBy($where, $settings));
+		$result = $this->loadRawBy($where, $settings);
+
+		if (!$row = $result->current()) return null;
+
+		return $this->prepareRow($row);
 	}
 
 	protected function loadAllBy(
@@ -86,9 +99,6 @@ trait EasyQueryTrait
 
 	protected function deleteBy(Where $where)
 	{
-		/**
-		 * @var SqlObjectProviderInterface $this
-		 */
 		$sql = $this->getSqlObject();
 		$delete = $sql->delete();
 
@@ -100,9 +110,6 @@ trait EasyQueryTrait
 
 	protected function updateBy(Where $where, array $data)
 	{
-		/**
-		 * @var SqlObjectProviderInterface $this
-		 */
 		$sql = $this->getSqlObject();
 		$update = $sql->update();
 
@@ -113,27 +120,18 @@ trait EasyQueryTrait
 		$statement->execute();
 	}
 
-	protected function prepareResultArray(ResultInterface $result)
+	protected function prepareResultIterator($result)
 	{
-		return iterator_to_array($this->prepareResultIterator($result));
+		return $this->getResultFactory()->prepareResultIterator($result);
 	}
 
-	protected function prepareResultIterator(ResultInterface $result)
+	protected function prepareResultArray($result)
 	{
-		return new ResultIterator($result, $this);
+		return $this->getResultFactory()->prepareResultArray($result);
 	}
 
-	protected function prepareRow(ResultInterface $result)
+	protected function prepareRow(array $result)
 	{
-		/**
-		 * @var EntityProducerInterface $this
-		 */
-		if (!$row = $result->current()) return null;
-		$entity = $this->createEntity();
-
-		$hydrator = new ObjectProperty();
-		$hydrator->hydrate($row, $entity);
-
-		return $entity;
+		return $this->getResultFactory()->prepareRow($result);
 	}
 } 
