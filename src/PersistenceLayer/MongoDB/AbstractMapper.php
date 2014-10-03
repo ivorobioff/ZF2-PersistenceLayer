@@ -74,6 +74,7 @@ abstract class AbstractMapper implements MapperInterface, EntityProducerInterfac
 		}
 		else
 		{
+			unset($data['_id']);
 			$result = $this->getCollection()->insert($data);
 			$hydrator->hydrate(['_id' => $data['_id']], $object);
 		}
